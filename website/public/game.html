@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Drawing Game</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script type="module" src="./js/game.js"></script>
+    <div id="Instructions" class="instruc">
+        <h1>Instructions</h1>
+        <div id="steps" class="steps">
+            <p>
+                1. Place your mouse cursor in the small red circle. After 1 second, the red circle will turn green.
+                <br>
+                2. Once the circle turns green, quickly move your mouse towards the white circle while staying within the borders.
+                <br>
+                3. Your score is based on speed (getting to the blue circle fast) and accuracy (staying within the borders).
+                <br>
+                4. You will receive feedback on your performance.
+            </p>
+        </div>
+        <img src="draw_video.gif" alt="drawingExample">
+        <button id="beginPractice">Continue</button>
+    </div>
+
+    <div id="Training" class="instruc">
+        <h1>Training day</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                Today is a training day. You will complete 3 blocks of 120 movements, with a 5 minute break between blocks. 
+            </p>
+        </div>
+        <button id="beginTraining">Start</button>
+    </div>
+
+    <div id="TrainingBreak" class="instruc">
+        <h1>Break time!</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                It is time for a break. The game will resume in <span id="countdownValue"></span> seconds. 
+            </p>
+        </div>
+    </div>
+
+    <div id="TrainingDemo" class="instruc">
+        <h1>Demo</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                Aim for this speed when drawing your circle. 
+            </p>
+            <img src="draw_video.gif" alt="drawingExample">
+        </div>
+    </div>
+
+    <div id="TrainingOver" class="overlay">
+        <div class="message">Training Over</div>
+        <div id="averageAccuracy" class="data-message">Average accuracy: </div>
+        <div class="data-message">Your data has been recorded. Thank you for completing your training!</div>
+    </div>
+
+    <div id="TrainingScore" class="trainingDesc">
+        <p>
+            <div id="score" class="score"></div>
+        </p>
+    </div>
+
+    <div id="TrainingGoalTime" class="trainingDesc">
+        <p>
+            <div id="goalTime" class="goalTime"></div>
+        </p>
+    </div>
+
+    <div id="TrainingFeedback" class="overlay">
+        <div id="feedback" class="data-message"></div>
+    </div>
+
+    <div id="Testing" class="instruc">
+        <h1>Testing day</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                Today is a testing day. You will complete 10 blocks of 10 movements. 
+            </p>
+        </div>
+        <button id="beginTesting">Start</button>
+    </div>
+
+    <div id="WarmUpScore" class="trainingDesc">
+    <p>
+        <div id="wuScore" class="score"></div>
+    </p>
+    </div>
+
+    <div id="WarmUpRound" class="trainingDesc">
+        <div id="wuRound" class="round"></div>
+    </div>
+
+    <div id="gameOverScreen" class="overlay">
+        <div class="message">Game Over</div>
+        <div id="averageAccuracy" class="data-message">Average accuracy: </div>
+        <div class="data-message">Your data has been recorded. Thank you for participating.</div>
+    </div>
+</body>
+</html>

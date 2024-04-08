@@ -27,8 +27,8 @@ def main():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     sim_score = []
     for i in range(1, 51):
-        image1 = os.path.join(script_dir, f"image_data/generated/generated_circle_{i}.png")
-        image2 = os.path.join(script_dir, f"image_data/drawn/drawn_circle_{i}.png")
+        image1 = os.path.join(script_dir, f"image_data/generated/generated_shape_{i}.png")
+        image2 = os.path.join(script_dir, f"image_data/drawn/drawn_shape_{i}.png")
         sim_score.append(i, generateScore(image1, image2))
     
     for sim in sim_score:
