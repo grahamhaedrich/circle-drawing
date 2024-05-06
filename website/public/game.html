@@ -7,33 +7,79 @@
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
+    <div id="StartPage" class="instruc">
+        <h1>Experiment Calendar</h1>
+        <div id="startPage" class="startPage">
+            <div class="day-box" id="day1">Testing Day 1</div>
+            <div class="day-box"  id="day2">Training Day 1</div>
+            <div class="day-box" id="day3">Training Day 2</div>
+            <div class="day-box" id="day4">Training Day 3</div>
+            <div class="day-box" id="day5">Testing Day 2</div>
+        </div>
+        <button id="startButton">Start</button>
+    </div>
+
     <canvas id="canvas"></canvas>
     <script type="module" src="./js/game.js"></script>
     <div id="Instructions" class="instruc">
         <h1>Instructions</h1>
-        <div id="steps" class="steps">
-            <p>
-                1. Place your mouse cursor in the small red circle. After 1 second, the red circle will turn green.
-                <br>
-                2. Once the circle turns green, quickly move your mouse towards the white circle while staying within the borders.
-                <br>
-                3. Your score is based on speed (getting to the blue circle fast) and accuracy (staying within the borders).
-                <br>
-                4. You will receive feedback on your performance.
-            </p>
-        </div>
-        <img src="draw_video.gif" alt="drawingExample">
+        <video width="640" height="360" controls>
+            <source src="tutorial.mp4" type="video/mp4">
+            Your browser does not support videos.
+        </video>
         <button id="beginPractice">Continue</button>
     </div>
 
+
+
     <div id="Training" class="instruc">
         <h1>Training day</h1>
-        <div id="trainingDesc" class="trainingDesc">
+        <div id="TrainingRoundDesc" class="trainingDesc">
             <p>
-                Today is a training day. You will complete 3 blocks of 120 movements, with a 5 minute break between blocks. 
+                Today, you will complete 3 blocks of 120 timed movements, with a 5 minute break between each block. 
             </p>
         </div>
         <button id="beginTraining">Start</button>
+    </div>
+    
+    <div id="TrainingRound1" class="instruc">
+        <h1>Warmup Round 1: Very Slow</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                10 movements, goal time range of 0-2000ms.
+            </p>
+        </div>
+        <button id="beginRound1">Ready</button>
+    </div>
+
+    <div id="TrainingRound2" class="instruc">
+        <h1>Warmup Round 2: Slow</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                10 movements, goal time range of 980-1440ms.
+            </p>
+        </div>
+        <button id="beginRound2">Ready</button>
+    </div>
+
+    <div id="TrainingRound3" class="instruc">
+        <h1>Warmup Round 3: Medium</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                10 movements, goal time range of 520-780ms.
+            </p>
+        </div>
+        <button id="beginRound3">Ready</button>
+    </div>
+
+    <div id="TrainingRound4" class="instruc">
+        <h1>Warmup Round 4: Fast</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                10 movements, goal time range of 360-540ms.
+            </p>
+        </div>
+        <button id="beginRound4">Ready</button>
     </div>
 
     <div id="TrainingBreak" class="instruc">
@@ -61,16 +107,8 @@
         <div class="data-message">Your data has been recorded. Thank you for completing your training!</div>
     </div>
 
-    <div id="TrainingScore" class="trainingDesc">
-        <p>
-            <div id="score" class="score"></div>
-        </p>
-    </div>
-
-    <div id="TrainingGoalTime" class="trainingDesc">
-        <p>
-            <div id="goalTime" class="goalTime"></div>
-        </p>
+    <div id="TrainingGoalTime" class="trainingOverlay">
+        <div id="goalTime"></div>
     </div>
 
     <div id="TrainingFeedback" class="overlay">
@@ -81,26 +119,55 @@
         <h1>Testing day</h1>
         <div id="trainingDesc" class="trainingDesc">
             <p>
-                Today is a testing day. You will complete 10 blocks of 10 movements. 
+                Today is a testing day. You will complete 40 practice movements, followed by 100 test movements. 
             </p>
         </div>
         <button id="beginTesting">Start</button>
     </div>
 
-    <div id="WarmUpScore" class="trainingDesc">
-    <p>
-        <div id="wuScore" class="score"></div>
-    </p>
+    <div id="TestingFeedback" class="overlay">
+        <div id="testingF" class="data-message"></div>
     </div>
 
-    <div id="WarmUpRound" class="trainingDesc">
-        <div id="wuRound" class="round"></div>
+    <div id="TestingRound" class="instruc">
+        <h1></h1>
+        <div id="TestingRoundDesc" class="trainingDesc">
+            <p></p>
+        </div>
+        <button id="beginTestRound">Ready</button>
     </div>
+
+    <div id="GameScore" class="stats">
+        <div id="score"></div>
+    </div>
+
+    <div id="GameRound" class="stats">
+        <div id="round"></div>
+    </div>
+
+    <div id="GameTimer" class="stats">
+        <div id="timer"></div>
+    </div>
+
+    <audio id="readySound">
+        <source src="ready_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="goSound">
+        <source src="go_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="finishSound">
+        <source src="finish_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="failSound">
+        <source src="fail_sound.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="gameOverScreen" class="overlay">
-        <div class="message">Game Over</div>
-        <div id="averageAccuracy" class="data-message">Average accuracy: </div>
-        <div class="data-message">Your data has been recorded. Thank you for participating.</div>
+        <div class="message">Day Completed</div>
+        <div id="finalMessage" class="data-message">Your data has been recorded. Thank you for participating.</div>
     </div>
 </body>
 </html>

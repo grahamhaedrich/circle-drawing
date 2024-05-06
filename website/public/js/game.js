@@ -28,8 +28,8 @@ const ctx = canvas.getContext("2d");
 ctx.lineWidth = 1;
 ctx.strokeStyle = "black";
 
-const innerSize = 110;
-const outerSize = innerSize * 1.3;
+let innerSize = 110;
+let outerSize = innerSize * 1.3;
 const borderX = canvas.width / 2;
 const borderY = canvas.height / 2;
 
@@ -40,12 +40,46 @@ const middleY = canvas.height / 2;
 
 let data = [];
 let accuracy = 0;
+let score = 0;
+let newScore = 0;
 let allAccuracies = [];
 let completed = false;
 let top = true;
+let training = false;
+
+const testingRoundPage = document.getElementById("TestingRound")
+const testingPageHeading = testingRoundPage.getElementsByTagName('h1')[0];
+const testingPageDesc = document.getElementById('TestingRoundDesc').getElementsByTagName('p')[0]; 
+
+const trainingRoundPage = document.getElementById("Training")
+const trainingPageHeading = trainingRoundPage.getElementsByTagName('h1')[0];
+const trainingPageDesc = document.getElementById('TrainingRoundDesc').getElementsByTagName('p')[0]; 
+
+const gameTimer = document.getElementById("timer")
+const gameRound = document.getElementById("round");
+const gameScore = document.getElementById("score");
+gameTimer.style.display = "none"
+gameRound.style.display = "none" 
+gameScore.style.display = "none"
+let day = new Date().getDay();
+
+let angle = 45 // degrees 
+let radAngle = 0
+let rotatedLeftX = 0
+let rotatedLeftY = 0
+
+let rotatedRightX = 0
+let rotatedRightY = 0
 
 // MAIN PAGE
 document.addEventListener("DOMContentLoaded", async function () {
+  day = 1
+  if (day == 1 || day == 5) {
+    training = false
+  }
+  else {
+    training = true
+  }
   writeData(
     {
       age: localStorage.getItem("age"),
@@ -53,22 +87,45 @@ document.addEventListener("DOMContentLoaded", async function () {
       handedness: localStorage.getItem("handedness"),
       device: localStorage.getItem("device"),
       training: training,
+      day: day
     },
     0,
   );
 
-  //await instructions();
+  await startPage();
 
   if (training) {
+    trainingPageHeading.textContent = `Training Day ${day-1}`
     await trainingPage();
+    await instructions();
     await trainingGame();
-    document.getElementById("trainingOver").style.display = "flex";
   } else {
     await testingPage();
+    await instructions();
     await testingGame();
-    document.getElementById("testingOver").style.display = "flex";
   }
+  ctx.fillStyle = "rgb(211, 211, 211)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("gameOverScreen").style.display = "flex";
 });
+
+async function startPage() {
+  return new Promise(async (resolve) => {
+    const Start = document.getElementById("StartPage")
+    Start.style.display = "flex";
+
+    const dayBoxElement = document.getElementById('day' + day);
+    if (dayBoxElement != null) {
+      dayBoxElement.style.backgroundColor = '#b6ffb6';
+    }
+   
+    const button = document.getElementById("startButton");
+    button.addEventListener("click", () => {
+      Start.style.display = "none";
+      resolve();
+    });
+  });
+}
 
 async function instructions() {
   return new Promise(async (resolve) => {
@@ -85,13 +142,11 @@ async function instructions() {
 }
 
 // TRAINING
-let training = false;
 let trainingBlocks = 3;
 let trainingMovements = 120;
 let trainingRestInterval = 30;
 let trainingDemoTime = 10 * 1000;
 let trainingRestTime = 5 * 60 * 1000;
-let trainingScore = 0;
 
 // slow group
 let trainingMinTime = 960;
@@ -110,13 +165,14 @@ let trainingReward = 3;
 
 async function trainingPage() {
   return new Promise(async (resolve) => {
-    const Instructions = document.getElementById("Training");
-    Instructions.style.display = "flex";
+    ctx.fillStyle = "rgb(211, 211, 211)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    trainingRoundPage.style.display = "flex";
 
     const button = document.getElementById("beginTraining");
 
     button.addEventListener("click", () => {
-      Instructions.style.display = "none";
+      trainingRoundPage.style.display = "none";
       resolve();
     });
   });
@@ -126,36 +182,42 @@ async function trainingGame() {
   return new Promise(async (resolve) => {
     let round = 0;
     for (let b = 0; b < trainingBlocks; b++) {
+      trainingPageHeading.textContent = `Training Block ${b+1}`
+      trainingPageDesc.textContent = `Goal time range: ${trainingMinTime} - ${trainingMaxTime}ms. Goal accuracy: 75%.`
+      await trainingPage()
       for (let m = 0; m < trainingMovements; m++) {
         round++;
 
-        const score = document.getElementById("score");
-        score.textContent = `Score: ${trainingScore}`;
-        score.style.display = "flex";
+        gameScore.textContent = `Score: ${score}`;
+        gameScore.style.display = "flex";
 
-        const goalTime = document.getElementById("goalTime");
-        goalTime.textContent = `Min: ${trainingMinTime}ms, Max: ${trainingMaxTime}ms`;
-        goalTime.style.display = "flex";
+        gameRound.textContent = `Round: ${round}`;
+        gameRound.style.display = "flex";
+
+        gameTimer.textContent = `Time: 0ms`;
+        gameTimer.style.display = "flex";
 
         displayBoundary();
-        await beginRound();
-        data = await beginDraw(trainingMaxTime);
+        await beginRound((trainingMinTime + trainingMaxTime)/2);
+        data = await beginDraw(trainingMinTime, trainingMaxTime);
         accuracy = calculateAccuracy(data["data"]);
         allAccuracies.push(accuracy);
         await drawPath(data["data"]);
 
         if (
-          data["time"] >= testingRounds[b].min / 1000 &&
-          data["time"] <= testingRounds[b].max / 1000 &&
-          accuracy >= 70
+          data["time"] >= trainingMinTime / 1000 &&
+          data["time"] <= trainingMaxTime / 1000 &&
+          accuracy >= 75
         ) {
           completed = true;
-          trainingScore += trainingReward;
+          score += trainingReward;
         } else {
           completed = false;
         }
 
-        await displayAccuracy(accuracy, data["time"]);
+        gameScore.textContent = `Score: ${score}`;
+
+        await displayAccuracy(accuracy, data["time"], trainingMinTime, trainingMaxTime);
 
         writeData(
           {
@@ -173,23 +235,27 @@ async function trainingGame() {
 
         top = !top;
       }
-      await trainingBreak();
+      if (b < trainingBlocks - 1) {
+        await trainingBreak();
+      }
     }
 
-    score.style.display = "none";
-    goalTime.style.display = "none";
+    gameScore.style.display = "none";
+    gameRound.style.display = "none";
+    gameTimer.style.display = "none";
 
-    const averageAccuracy =
-      allAccuracies.reduce((sum, accuracy) => sum + accuracy, 0) /
-      allAccuracies.length;
-    document.getElementById("averageAccuracy").textContent +=
-      `${averageAccuracy.toFixed(2)}%`;
+    const averageAccuracy =  allAccuracies.reduce((sum, accuracy) => sum + accuracy, 0) /allAccuracies.length;
     resolve();
   });
 }
 
 function trainingDemo() {
   return new Promise(async (resolve) => {
+    ctx.fillStyle = "rgb(211, 211, 211)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    gameScore.style.display = "none";
+    gameRound.style.display = "none";
+    goalTimer.style.display = "none";
     const Demo = document.getElementById("TrainingDemo");
     Demo.style.display = "flex";
 
@@ -202,11 +268,17 @@ function trainingDemo() {
 
 function trainingBreak() {
   return new Promise(async (resolve) => {
+    ctx.fillStyle = "rgb(211, 211, 211)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    gameScore.style.display = "none";
+    gameRound.style.display = "none";
+    gameTimer.style.display = "none";
     const Break = document.getElementById("TrainingBreak");
     Break.style.display = "flex";
 
     const countdownElement = document.getElementById("countdownValue");
     let remainingSeconds = trainingRestTime / 1000;
+    countdownElement.textContent = remainingSeconds;
 
     const countdownInterval = setInterval(() => {
       countdownElement.textContent = remainingSeconds;
@@ -222,21 +294,25 @@ function trainingBreak() {
 }
 
 // TESTING
-const testingRanges = [
+const testRanges = [
   { min: 240, max: 420 },
   { min: 400, max: 600 },
   { min: 640, max: 960 },
   { min: 800, max: 1200 },
   { min: 1200, max: 1800 },
 ];
-const testingRounds = testingRanges.flatMap((range) => [range, range]); // two of each time range
-shuffleArray(testingRounds); // randomize range
+const testAngles = [0, 15, 30, 60, 90, 180, 195, 210, 240, 270]
+const testBlocks = 50
+const testBlockTrials = 12
+
+let testRounds = shuffleArray(testRanges).concat(shuffleArray(testRanges))
 
 const testingRestTime = 10 * 1000;
-const testingPracticeMovements = 40;
-const testingBlocks = 10;
-const testingBlockMovements = 10;
-const warmUpMaxTime = 1000 * 1000;
+const testingDemoTime = 10 * 1000;
+const testingPracticeMovements = 0;
+let warmUpMinTime = 0;
+let warmUpMaxTime = 1000 * 1000;
+let warmUp = true
 
 async function testingPage() {
   return new Promise(async (resolve) => {
@@ -244,7 +320,6 @@ async function testingPage() {
     Testing.style.display = "flex";
 
     const button = document.getElementById("beginTesting");
-
     button.addEventListener("click", () => {
       Testing.style.display = "none";
       resolve();
@@ -252,66 +327,186 @@ async function testingPage() {
   });
 }
 
+async function practiceRounds(round) {
+  ctx.fillStyle = "rgb(211, 211, 211)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (round == 1) {
+    return new Promise(async (resolve) => {
+      const page = document.getElementById("TrainingRound1");
+      page.style.display = "flex";
+
+      const button = document.getElementById("beginRound1");
+
+      button.addEventListener("click", () => {
+        page.style.display = "none";
+        resolve();
+      });
+    });
+  } else if (round == 2) {
+      return new Promise(async (resolve) => {
+        const page = document.getElementById("TrainingRound2");
+        page.style.display = "flex";
+  
+        const button = document.getElementById("beginRound2");
+
+        button.addEventListener("click", () => {
+          page.style.display = "none";
+          resolve();
+        });
+      });
+  } else if (round == 3) {
+      return new Promise(async (resolve) => {
+        const page = document.getElementById("TrainingRound3");
+        page.style.display = "flex";
+  
+        const button = document.getElementById("beginRound3");
+
+        button.addEventListener("click", () => {
+          page.style.display = "none";
+          resolve();
+        });
+      });
+  } else if (round == 4) {
+      return new Promise(async (resolve) => {
+        const page = document.getElementById("TrainingRound4");
+        page.style.display = "flex";
+  
+        const button = document.getElementById("beginRound4");
+
+        button.addEventListener("click", () => {
+          page.style.display = "none";
+          resolve();
+        });
+      });
+  }
+}
+
 async function testingGame() {
   return new Promise(async (resolve) => {
-    let warmUpRound = document.getElementById("WarmUpRound");
-    let warmUpScore = document.getElementById("WarmUpScore");
+    gameTimer.textContent = `Time: 0ms`;
 
-    let round = 0, score = 0;
+    let round = 0;
     for (let m = 0; m < testingPracticeMovements; m++) {
         round++;
-        document.getElementById("wuRound").textContent = `Warm-up Round: ${round}`;
-        document.getElementById("wuScore").textContent = `Score: ${score}`;
-        warmUpRound.style.display = "flex";
-        warmUpScore.style.display = "flex";
 
-        await beginRound();
-        data = await beginDraw(warmUpMaxTime);
-        
-        accuracy = calculateAccuracy(data["data"], innerSize, outerSize);
-        await displayAccuracy(accuracy, data["time"]);
+        if (round == 1) {
+          gameRound.style.display = "none";
+          gameScore.style.display = "none";
+          gameTimer.style.display = "none";
+          warmUpMinTime = 0;
+          warmUpMaxTime = 2000;
+          await practiceRounds(1)
+        } else if (round == 11) {
+          gameRound.style.display = "none";
+          gameScore.style.display = "none";
+          gameTimer.style.display = "none";
+          await practiceRounds(2)
+          warmUpMinTime = 960 
+          warmUpMaxTime = 1440
+        } else if (round == 21) {
+          gameRound.style.display = "none";
+          gameScore.style.display = "none";
+          gameTimer.style.display = "none";
+          await practiceRounds(3)
+          warmUpMinTime = 520
+          warmUpMaxTime = 780
+        } else if (round == 31) {
+          gameRound.style.display = "none";
+          gameScore.style.display = "none";
+          gameTimer.style.display = "none";
+          await practiceRounds(4)
+          warmUpMinTime = 360
+          warmUpMaxTime = 540
+        }
+
+        gameRound.textContent = `Practice Round ${round}`;
+        gameScore.textContent = `Score: ${score}`;
+        gameRound.style.display = "flex";
+        gameScore.style.display = "flex";
+        gameTimer.style.display = "flex";
+
+        displayBoundary()
+        await beginRound((warmUpMinTime + warmUpMaxTime)/2);
+        data = await beginDraw(warmUpMinTime, warmUpMaxTime);
+        await drawPath(data["data"]);
+        accuracy = calculateAccuracy(data["data"]);
+        newScore = Math.round(accuracy/(data['time']*10))
+        await displayAccuracy(accuracy, data["time"], warmUpMinTime, warmUpMaxTime);
 
         top = !top;
     }
-
+    gameRound.style.display = "none";
+    gameScore.style.display = "none";
+    gameTimer.style.display = "none";
+    warmUp = false;
     top = true;
+    round = 0
+    score = 0
 
-    for (b = 0; b < testingBlocks; b++) {
-        for (m = 0; m < testingBlockMovements; m++) {
-        displayBoundary();
-        await beginRound();
-        data = await beginDraw(testRounds[b].max);
+    for (let b = 0; b < testBlocks; b++) {
+        testingPageHeading.textContent = `Testing Round ${b+1}`;
+        testingPageDesc.textContent = `12 movements, goal time: ${testingRounds[b].min}-${testingRounds[b].max}ms`;
+        
+        gameRound.style.display = "none";
+        gameScore.style.display = "none";
+        gameTimer.style.display = "none";
+        await testingRoundStart();
+        gameRound.style.display = "flex";
+        gameScore.style.display = "flex";
+        gameTimer.style.display = "flex";
 
-        accuracy = calculateAccuracy(data["data"], innerSize, outerSize);
-        await displayAccuracy(accuracy, data["time"]);
+        for (let m = 0; m < testingBlockMovements; m++) {
+          round++
+          gameRound.textContent = `Round ${round}`;
+          gameScore.textContent = `Score: ${score}`;
 
-        let dataToStore = {
-            interval: testingRounds[b],
-            points: data["data"],
-            accuracy: accuracy,
-            time: data["time"],
-            completed: data["completed"],
-        };
+          displayBoundary();
+          await beginRound( (testingRounds[b].min + testingRounds[b].max) / 2);
+          data = await beginDraw(testingRounds[b].min, testingRounds[b].max);
 
-        allAccuracies.push(accuracy);
+          accuracy = calculateAccuracy(data["data"]);
+          newScore = Math.round(accuracy/(data['time']*10))
+          let dataToStore = {
+              interval: testingRounds[b],
+              points: data["data"],
+              accuracy: accuracy,
+              time: data["time"],
+              completed: data["completed"],
+          };
 
-        writeData(dataToStore, currentGame);
+          await drawPath(data["data"]);
+          accuracy = calculateAccuracy(data["data"]);
+          await displayAccuracy(accuracy, data["time"], testingRounds[b].min, testingRounds[b].max, score);
 
-        top = !top;
+          writeData(dataToStore, round);
+
+          top = !top;
         }
     }
 
-    const averageAccuracy =
-        allAccuracies.reduce((sum, accuracy) => sum + accuracy, 0) /
-        allAccuracies.length;
-    document.getElementById("averageAccuracy").textContent +=
-        `${averageAccuracy.toFixed(2)}%`;
+    const averageAccuracy = allAccuracies.reduce((sum, accuracy) => sum + accuracy, 0) / allAccuracies.length;
     resolve()
     });
 }
 
+function testingRoundStart() {
+  return new Promise(async (resolve) => {
+    ctx.fillStyle = "rgb(211, 211, 211)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    testingRoundPage.style.display = "flex";
+    
+    const button = document.getElementById("beginTestRound")
+    button.addEventListener("click", () => {
+      testingRoundPage.style.display = "none";
+      resolve();
+    });
+  });
+}
+
 // GAME
 function displayBoundary() {
+  gameTimer.textContent = `Time: 0ms`;
   ctx.fillStyle = "rgb(211, 211, 211)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -327,46 +522,54 @@ function displayBoundary() {
   ctx.fill();
   ctx.stroke();
 
+  radAngle = angle * (Math.PI / 180);
+  rotatedLeftX = borderX + (leftCircleX - borderX) * Math.cos(radAngle)
+  rotatedLeftY = borderY + (leftCircleX - borderX) * Math.sin(radAngle)
+
+  rotatedRightX = borderX + (rightCircleX - borderX) * Math.cos(radAngle)
+  rotatedRightY = borderY + (rightCircleX - borderX) * Math.sin(radAngle)
+
   if (top == true) {
-    ctx.fillStyle = "rgb(255, 0, 0)";
+    ctx.fillStyle = "rgb(115, 147, 179)";
     ctx.beginPath();
-    ctx.arc(leftCircleX, middleY, middleSize, 0, 2 * Math.PI);
+    ctx.arc(rotatedLeftX, rotatedLeftY, middleSize, 0, 2 * Math.PI);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.beginPath();
-    ctx.arc(rightCircleX, middleY, middleSize, 0, 2 * Math.PI);
+    ctx.arc(rotatedRightX, rotatedRightY, middleSize, 0, 2 * Math.PI);
     ctx.fill();
     ctx.stroke();
   } else {
-    ctx.fillStyle = "rgb(255, 255, 255)";
+    ctx.fillStyle = "rgb(115, 147, 179)";
     ctx.beginPath();
-    ctx.arc(leftCircleX, middleY, middleSize, 0, 2 * Math.PI);
+    ctx.arc(rotatedLeftX, rotatedLeftY, middleSize, 0, 2 * Math.PI);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = "rgb(255, 0, 0)";
+    ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.beginPath();
-    ctx.arc(rightCircleX, middleY, middleSize, 0, 2 * Math.PI);
+    ctx.arc(rotatedRightX, rotatedRightY, middleSize, 0, 2 * Math.PI);
     ctx.fill();
     ctx.stroke();
   }
 }
 
-function beginRound() {
+function beginRound(intervalTime) {
   return new Promise(async (resolve) => {
+    var roundStart = false
     var isMouseInsideCircle = false;
     var mouseInCircleTime = 0;
     var intervalId;
-
+    
     canvas.addEventListener("mousemove", function (event) {
       var mouseX = event.offsetX;
       var mouseY = event.offsetY;
 
       if (top == true) {
         if (
-          Math.sqrt((mouseX - leftCircleX) ** 2 + (mouseY - middleY) ** 2) <=
+          Math.sqrt((mouseX - rotatedLeftX) ** 2 + (mouseY - rotatedLeftY) ** 2) <=
           middleSize
         ) {
           if (!isMouseInsideCircle) {
@@ -380,7 +583,7 @@ function beginRound() {
         }
       } else {
         if (
-          Math.sqrt((mouseX - rightCircleX) ** 2 + (mouseY - middleY) ** 2) <=
+          Math.sqrt((mouseX - rotatedRightX) ** 2 + (mouseY - rotatedRightY) ** 2) <=
           middleSize
         ) {
           if (!isMouseInsideCircle) {
@@ -395,36 +598,92 @@ function beginRound() {
       }
     });
 
-    function checkTime() {
+    async function checkTime() {
       var elapsedTime = Date.now() - mouseInCircleTime;
-      if (elapsedTime >= 1000) {
-        ctx.fillStyle = "rgb(0, 255, 0)";
-        ctx.beginPath();
+      if (elapsedTime >= 1000 && roundStart == false) {
+        roundStart = true
+        var sound = document.getElementById("readySound");
 
+        ctx.fillStyle = "rgb(255, 0, 0)"; // red
+        ctx.beginPath();
         if (top == true) {
-          ctx.arc(leftCircleX, middleY, middleSize, 0, 2 * Math.PI);
+          ctx.arc(rotatedLeftX, rotatedLeftY, middleSize, 0, 2 * Math.PI);
         } else {
-          ctx.arc(rightCircleX, middleY, middleSize, 0, 2 * Math.PI);
+          ctx.arc(rotatedRightX, rotatedRightY, middleSize, 0, 2 * Math.PI);
         }
         ctx.fill();
         ctx.stroke();
+        sound.play();
+        await wait(intervalTime)
+
+        if (!isMouseInsideCircle) {
+          roundStart = false
+          ctx.fillStyle = "rgb(115, 147, 179)";
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath()
+          return
+        }
+        ctx.fillStyle = "rgb(255, 162, 0)"; // orange
+        ctx.fill();
+        ctx.stroke();
+        sound.currentTime = 0
+        sound.play();
+        await wait(intervalTime)
+
+        if (!isMouseInsideCircle) {
+          roundStart = false
+          ctx.fillStyle = "rgb(115, 147, 179)";
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath()
+          return
+        }
+        ctx.fillStyle = "rgb(255, 255, 102)"; // yellow
+        ctx.fill();
+        ctx.stroke();
+        sound.currentTime = 0
+        sound.play();
+        await wait(intervalTime)
+
+        if (!isMouseInsideCircle) {
+          roundStart = false
+          ctx.fillStyle = "rgb(115, 147, 179)";
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath()
+          return
+        }
+        canvas.removeEventListener("mousemove", beginRound);
+
+        ctx.fillStyle = "rgb(0, 255, 0)"; // green
+        ctx.fill();
+        ctx.stroke();
+        var sound = document.getElementById("goSound");
+        sound.play();
+      
         clearInterval(intervalId);
         resolve();
       }
     }
   });
-}
+}  
 
-function beginDraw(maxTime) {
+function beginDraw(minTime, maxTime) {
   return new Promise(async (resolve) => {
     var startTime = new Date().getTime();
+    var elapsedTime = 0;
     var mouseX = 0;
     var mouseY = 0;
     var data = [];
-
+    var completed = false
     canvas.addEventListener("mousemove", mouseMovement);
-
+  
     async function mouseMovement(event) {
+      elapsedTime = new Date().getTime() - startTime;
+      gameTimer.textContent = `Time: ${elapsedTime}ms`;
+      gameTimer.style.display = "flex";
+
       mouseX = event.offsetX;
       mouseY = event.offsetY;
       data.push({
@@ -432,19 +691,41 @@ function beginDraw(maxTime) {
         y: mouseY - canvas.height / 2,
       });
 
+      var insideCircle = false;
       if (
         (top == true &&
-          mouseX >= rightCircleX - middleSize &&
-          mouseX <= rightCircleX + middleSize &&
-          mouseY >= middleY - middleSize &&
-          mouseY <= middleY + middleSize) ||
-        (top == false &&
-          mouseX >= leftCircleX - middleSize &&
-          mouseX <= leftCircleX + middleSize &&
-          mouseY >= middleY - middleSize &&
-          mouseY <= middleY + middleSize)
-      ) {
+          mouseX >= rotatedRightX - middleSize &&
+          mouseX <= rotatedRightX + middleSize &&
+          mouseY >= rotatedRightY - middleSize &&
+          mouseY <= rotatedRightY + middleSize) ||
+        top == false &&
+          mouseX >= rotatedLeftX - middleSize &&
+          mouseX <= rotatedLeftX + middleSize &&
+          mouseY >= rotatedLeftY - middleSize &&
+          mouseY <= rotatedLeftY + middleSize)
+        {
         canvas.removeEventListener("mousemove", mouseMovement);
+        if (elapsedTime < minTime) {
+          var sound = document.getElementById("failSound");
+          sound.play();
+        } else {
+          var sound = document.getElementById("finishSound");
+          sound.play();
+        }
+        completed = true
+
+
+
+        ctx.fillStyle = "rgb(0, 255, 0)";
+        ctx.beginPath();
+        if (top == true) {
+          ctx.arc(rotatedLeftX, rotatedLeftY, middleSize, 0, 2 * Math.PI);
+        } else {
+          ctx.arc(rotatedRightX, rotatedRightY, middleSize, 0, 2 * Math.PI);
+        }
+        ctx.fill();
+        ctx.stroke();
+
         var time = ((new Date().getTime() - startTime) / 1000).toFixed(3);
         resolve({ data: data, time: time });
       }
@@ -452,7 +733,12 @@ function beginDraw(maxTime) {
 
     setTimeout(async function () {
       canvas.removeEventListener("mousemove", mouseMovement);
-      await drawPath(data);
+      if (completed == false) {
+        gameTimer.textContent = `Time: ${maxTime}ms`;
+        var sound = document.getElementById("failSound");
+        sound.play();
+      }
+
       resolve({
         data: data,
         time: ((new Date().getTime() - startTime) / 1000).toFixed(3),
@@ -481,30 +767,71 @@ function calculateAccuracy(data) {
   return parseFloat(accuracyPercentage);
 }
 
-function displayAccuracy(accuracy, time) {
-  const display = document.getElementById("TrainingFeedback");
-  const feedback = document.getElementById("feedback");
-
+function displayAccuracy(accuracy, time, minTime, maxTime) {
   return new Promise((resolve) => {
+    time *= 1000;
+
     if (training) {
-      time *= 1000;
-      if (time < trainingMinTime) {
-        feedback.textContent = `Slow down, you took ${time}ms, minimum time is ${trainingMinTime}ms. No score added.`;
-      } else if (time > trainingMaxTime) {
-        feedback.textContent = `Speed up, maximum time is ${trainingMaxTime}ms. No score added.`;
+      const display = document.getElementById("TrainingFeedback");
+      const feedback = document.getElementById("feedback");
+      if (time < minTime) {
+        feedback.textContent = `Slow down. No points.`;
+      } else if (time > maxTime) {
+        feedback.textContent = `Speed up. No points.`;
       } else {
-        if (accuracy >= 85) {
-          feedback.textContent = `${accuracy}% accuracy, great job!. Rewarded +${trainingReward} score`;
+        if (accuracy >= 75) {
+          score += newScore
+          feedback.textContent = `${Math.round(accuracy)}% accuracy. +${trainingReward} points.`;
         } else {
-          feedback.textContent = `${accuracy}% accuracy, room for improvement! No score added.`;
+          feedback.textContent = `${Math.round(accuracy)}% accuracy. No points.`;
         }
       }
-
       display.style.display = "flex";
       setTimeout(() => {
         display.style.display = "none";
         resolve();
       }, 3000);
+    }
+    else if (warmUp) {
+        const display = document.getElementById("TestingFeedback");
+        const feedback = document.getElementById("testingF");
+        if (time < warmUpMinTime) {
+          feedback.textContent = `Slow down. No points.`;
+        } else if (time > warmUpMaxTime) {
+          feedback.textContent = `Speed up. No points.`;
+        } else {
+          if (accuracy >= 80) {
+            feedback.textContent = `${Math.round(accuracy)}% accuracy. +${trainingReward} points.`;
+          } else {
+            feedback.textContent = `${Math.round(accuracy)}% accuracy. No points.`;
+          }
+        }
+        display.style.display = "flex";
+        setTimeout(() => {
+          display.style.display = "none";
+          resolve();
+        }, 2000);
+    }
+    else {
+        const display = document.getElementById("TestingFeedback");
+        const feedback = document.getElementById("testingF");
+        if (time < minTime) {
+            feedback.textContent = `Go slower`;
+        } else if (time > maxTime) {
+            feedback.textContent = `Go faster`;
+        } else {
+          if (accuracy >= 80) {
+            score += newScore
+            feedback.textContent = `${Math.round(accuracy)}% accuracy. +${newScore} points.`;
+          } else {
+            feedback.textContent = `${Math.round(accuracy)}% accuracy. No points.`;
+          }
+        }
+        display.style.display = "flex";
+        setTimeout(() => {
+          display.style.display = "none";
+          resolve();
+        }, 1500);
     }
   });
 }
@@ -529,14 +856,14 @@ function insideBorder(x, y) {
       (distanceToCenter <= outerSize &&
         distanceToCenter >= innerSize &&
         y - canvas.height / 2 <= 0) ||
-      Math.sqrt((x - leftCircleX) ** 2 + (y - middleY) ** 2) <= middleSize
+      Math.sqrt((x - rotatedLeftX) ** 2 + (y - rotatedLeftY) ** 2) <= middleSize
     );
   } else {
     return (
       (distanceToCenter <= outerSize &&
         distanceToCenter >= innerSize &&
         y - canvas.height / 2 >= 0) ||
-      Math.sqrt((x - rightCircleX) ** 2 + (y - middleY) ** 2) <= middleSize
+      Math.sqrt((x - rotatedRightX) ** 2 + (y - rotatedRightY) ** 2) <= middleSize
     );
   }
 }
@@ -563,12 +890,14 @@ function getRandomNum(min, max) {
 }
 
 function shuffleArray(array) {
-  for (var i = array.length - 1; i > 0; i--) {
+  const shuffledArray = array.slice();
+  for (var i = shuffledArray.length - 1; i > 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
-    var temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
+    var temp = shuffledArray[i];
+    shuffledArray[i] = shuffledArray[j];
+    shuffledArray[j] = temp;
   }
+  return shuffledArray;
 }
 
 function wait(ms) {
