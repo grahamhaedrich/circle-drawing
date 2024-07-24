@@ -10,7 +10,14 @@
     <div class="container">
         <h1>Shape Drawing Test</h1>
         <div id="userInformation">
-            <h2>Your Info</h2>
+            <!--<h2>Login</h2>
+            <form id="loginForm" action="game.html" method="get">
+                <label for="loginID">User ID:</label>
+                <input type="text" id="loginID" name="loginID" required><br>
+                <div id="loginError"></div>
+                <button type="button" id="loginButton">Start</button>
+            </form>-->
+            <h2>Sign Up</h2>
             <form id="userInfoForm" action="game.html" method="get">
                 <label for="age">Age:</label>
                 <input type="number" id="age" name="age" required><br>
@@ -40,37 +47,68 @@
                     <option value="laptop">Other</option>
                 </select><br>
 
-                <label for="userid">User ID:</label>
+                <label for="userid">Prolific ID:</label>
                 <input type="text" id="userID" name="userid" required><br>
 
-                <button type="button" id="consentButton">
-                    <span>Consent Form ▼</span>
-                </button>
-
                 <div id="consentContainer">
-                    <embed id="consentPDF" src="consent_form.pdf" type="application/pdf">
+                    <embed id="consentPDF" src="consent_form.pdf#toolbar=0" type="application/pdf">
                     <br>
                     <input type="checkbox" id="consentCheckbox" required>
                     <label for="consentCheckbox" class="consent-label">I accept</label><br>
                 </div>
 
-                <button type="button" id="startButton">Start Game</button>
                 <div id="errorMessages" class="error"></div>
+                <button type="button" id="startButton">Start</button>
             </form>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const consentButton = document.getElementById('consentButton');
-            const consentContainer = document.getElementById('consentContainer');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            set,
+            get,
+            child
+        } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
 
-            consentButton.addEventListener('click', function () {
-                consentContainer.style.display = 'block';
-            });
-        });
+        const firebaseConfig = {
+        apiKey: "AIzaSyDB-h4RQa4PCTy5ZcaIfO2kq-ujH48VueA",
+        authDomain: "circle-drawing-a78f9.firebaseapp.com",
+        projectId: "circle-drawing-a78f9",
+        storageBucket: "circle-drawing-a78f9.appspot.com",
+        messagingSenderId: "740528213712",
+        appId: "1:740528213712:web:1fdd1f0137196e00abd8d5",
+        measurementId: "G-ER236S69LP",
+        databaseURL: "https://circle-drawing-a78f9-default-rtdb.firebaseio.com",
+        };
 
-        document.getElementById('startButton').addEventListener('click', function(event) {
+        const app = initializeApp(firebaseConfig);
+        const dbRef = ref(getDatabase());
+
+        async function userExists(id) {
+            const snapshot = await get(child(dbRef, `users/${id}/userData`));
+            return snapshot.exists();
+        }
+        /* commented out for Prolific
+        document.getElementById('loginButton').addEventListener('click', async function(event) {
+            var loginID = document.getElementById('loginID').value;
+            loginError.innerHTML = '';
+            var exists = await (userExists(loginID))
+
+            if (!exists) {
+               loginError.innerHTML = '<p class="error">User ID not found.</p>';
+            } 
+            else {
+                let loggedIn = true
+                localStorage.setItem('loginID', loginID)
+                localStorage.setItem('loggedIn', loggedIn)
+                document.getElementById('loginForm').submit();
+            }
+        }); */
+
+        document.getElementById('startButton').addEventListener('click', async function(event) {
             var age = document.getElementById('age').value;
             var gender = document.getElementById('gender').value;
             var handedness = document.getElementById('handedness').value;
@@ -80,10 +118,10 @@
             var errorMessages = document.getElementById('errorMessages');
 
             errorMessages.innerHTML = '';
+            let hasNumber = /\d/
+            var exists = await (userExists(userID))
 
-            var validIDs = ['Jonathan', 'Nicki', 'Graham', 'TestDummy'];
-            console.log(userID)
-            if (!age || !gender || !handedness || !device || !userID || !validIDs.includes(userID) || !consent) {
+            if (!age || !gender || !handedness || !device || !userID || !consent) {
                 if (!age) {
                     errorMessages.innerHTML = '<p class="error">You must enter your age.</p>';
                 }
@@ -97,21 +135,27 @@
                     errorMessages.innerHTML = '<p class="error">You must select your device.</p>';
                 }
                 else if (!userID) {
-                    errorMessages.innerHTML = '<p class="error">You must enter a user ID.</p>';
-                }
-                else if (!validIDs.includes(userID)) {
-                    errorMessages.innerHTML = '<p class="error">User ID is not valid.</p>';
+                    errorMessages.innerHTML = '<p class="error">You must enter a Prolific ID.</p>';
                 }
                 else if (!consent) {
-                    errorMessages.innerHTML = '<p class="error">You must accept consent form.</p>';
+                    errorMessages.innerHTML = '<p class="error">You must accept the consent form.</p>';
                 }
-            } 
-            else {
+            } else if (exists) {
+                errorMessages.innerHTML = '<p class="error">Prolific ID already exists.</p>';
+            } /*else if (userID.length < 8) { removed for Prolific
+                errorMessages.innerHTML  = '<p class="error">User ID must be atleast 8 characters.</p>';
+            } else if (!hasNumber.test(userID)) {
+                errorMessages.innerHTML = '<p class="error">User ID must contain atleast one number.</p>';
+            } else if (!/[a-z]/i.test(userID)) {
+                errorMessages.innerHTML = '<p class="error">User ID must contain atleast one letter.</p>';
+            } */else {
+                let loggedIn = false
                 localStorage.setItem('age', age);
                 localStorage.setItem('gender', gender);
                 localStorage.setItem('handedness', handedness);
                 localStorage.setItem('device', device);
                 localStorage.setItem('userID', userID);
+                localStorage.setItem('loggedIn', loggedIn)
                 document.getElementById('userInfoForm').submit();
             }
         });

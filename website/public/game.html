@@ -7,79 +7,154 @@
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-    <div id="StartPage" class="instruc">
-        <h1>Experiment Calendar</h1>
-        <div id="startPage" class="startPage">
-            <div class="day-box" id="day1">Testing Day 1</div>
-            <div class="day-box"  id="day2">Training Day 1</div>
-            <div class="day-box" id="day3">Training Day 2</div>
-            <div class="day-box" id="day4">Training Day 3</div>
-            <div class="day-box" id="day5">Testing Day 2</div>
-        </div>
-        <button id="startButton">Start</button>
-    </div>
-
-    <canvas id="canvas"></canvas>
+    <canvas id="mainCanvas"></canvas>
+    <canvas id="mouseCanvas"></canvas>
+    <canvas id="pathCanvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+    <script src="https://u</div>npkg.com/regression"></script>
     <script type="module" src="./js/game.js"></script>
-    <div id="Instructions" class="instruc">
-        <h1>Instructions</h1>
-        <video width="640" height="360" controls>
-            <source src="tutorial.mp4" type="video/mp4">
-            Your browser does not support videos.
-        </video>
-        <button id="beginPractice">Continue</button>
+
+    <div id="StartPage" class="instruc">
+        <h1>Select Your Day</h1>
+        <div id="startPage" class="startPage">
+            <div class="day-box" id="day1">Day 1: Testing</div>
+            <div class="day-box" id="day2">Day 2: Training</div>
+            <div class="day-box" id="day3">Day 3: Training</div>
+            <div class="day-box" id="day4">Day 4: Training</div>
+            <div class="day-box" id="day5">Day 5: Testing</div>
+        </div>
+        <p id="warningMessage" class="error"></p>
+        <button id="startButton">Press "Enter" to Continue</button>
     </div>
 
+    <div id="EndPage" class="instruc">
+        <h1>Day Complete</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            You have already completed today's stage. Please return tomorrow. 
+        </div>
+    </div>
 
+    <div id="ExperimentComplete" class="instruc">
+        <h1>Experiment Complete</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            Thank you for participating!
+        </div>
+    </div>
+
+    <div id="MovementInstructions" class="instruc">
+        <h1>Experiment Instructions</h1>
+        <ol class="trainingDesc">
+            <div class="instrucHeader">Goal</div>
+            <div>&nbsp The goal of this task is to accurately move your cursor along the dotted line to the target at the correct speed. <b>Prioritize moving at the right speed!</b></div>
+            <br>
+            <br>
+            <div class="instrucHeader">Performing the Movement</div>
+            <ol class="movementList">
+                <li>Place your mouse cursor inside the blue circle.</li>
+                <img src="blue_circle_demo.png" alt="Start of Movement" class="instrucImage">
+                <li>You will hear a countdown consisting of 4 audible tones.</li>
+                <li>Start moving on the 3<sup>rd</sup> tone when the circle turns green, initiating a clockwise movement following the dotted black arrow. </li>
+                <li>There will be a green dot that conveys the ideal speed and accuracy. Follow this dot as closely as you can.</li>
+                <img src="movement_demo.png" alt="Middle of Movement" class="instrucImage">
+                <li>Complete the movement on the 4<sup>th</sup> tone by hitting the target. The ideal landing position is the green zone, while the least desired landing position is the red zone.</li>
+                <img src="completed_demo.png" alt="End of Movement" class="instrucImage">
+            </ol>
+
+            <div class="instrucHeader">Feedback</div>
+            <div>&nbsp After each movement, you will receive feedback on your performance.</div>
+            <ol class="feedbackList">
+                <li>Move Faster: You finished the movement too quickly for the time interval.</li>
+                <li>Move Slower: You finished the movement too slowly for the time interval.</li>
+            </ol>
+            </li>
+            <br>
+            <br>
+            <div>The experiment will temporarily change your cursor sensitivity. Press "Esc" to pause the experiment (not recommended).</div>
+        </ol>
+        <button id="beginPractice">Press "Enter" to Start</button>
+    </div>
+
+    <div id="CalibrationProcess" class="instruc">
+        <h1>Calibration Process</h1>
+        <ol class="trainingDescCalibration">
+            <li><b>Obtain a Card:</b> Ensure you have a debit or credit card available for calibration.</li>
+            <li><b>Position Your Card:</b> Place the card flat on your trackpad with the short side facing you.</li>
+            <img src="cardposition.png" alt="Card Position" class="calibrationImage">
+            <li><b>Position Your Finger:</b> Place your finger on the left side of the card.</li>
+            <img src="leftside.png" alt="Finger On Left Side of Card" class="calibrationImage">
+            <li><b>Start Calibration:</b> Move your mouse to the left side of the screen. Press the "s" key on your keyboard to begin the calibration process.</li>
+            <li><b>Move Horizontally:</b> Slide your hand horizontally across the trackpad at a comfortable pace, moving from the left side to the right side of the card.</li>
+            <img src="rightside.png" alt="Finger On Right Side of Card" class="calibrationImage">
+            <li><b>Complete Calibration:</b> Press the "e" key to finish the calibration process once you reach the other end of the card.</li>
+            <li><b>Repeat:</b> Repeat this procedure 5 times.</li>
+            <li><b>Redo Calibration (Optional):</b> If you need to redo the calibration, press the "r" key and repeat steps 3 to 7.</li>
+        </ol>
+        <div class="trainingDesc"></div>
+        <p id="movementWarningMessage" class="error"></p>
+        <div class="movement-box" id="movement1">Movement 1: No Data</div>
+        <div class="movement-box" id="movement2">Movement 2: No Data</div>
+        <div class="movement-box" id="movement3">Movement 3: No Data</div>
+        <div class="movement-box" id="movement4">Movement 4: No Data</div>
+        <div class="movement-box" id="movement5">Movement 5: No Data</div>
+        <button id="calibrationProcessButton">Complete Calibration Procedure</button>
+        <div id="movementMessage" class="movementOverlay" display="none"></div>
+    </div>
+
+    <div id="MouseOverlay" class="mouseTitle">
+        <h1>Re-Enable Mouse Locking</h1>
+        <div id="MouseOverlayDesc" class="overlayDesc">
+                Please wait 5s, then click anywhere on the screen to continue the experiment.
+        </div>
+    </div>
 
     <div id="Training" class="instruc">
         <h1>Training day</h1>
         <div id="TrainingRoundDesc" class="trainingDesc">
             <p>
-                Today, you will complete 3 blocks of 120 timed movements, with a 5 minute break between each block. 
+                Today, you will complete 4 blocks of 50 timed movements, with a 2 minute break between each block. 
             </p>
         </div>
-        <button id="beginTraining">Start</button>
+        <button id="beginTraining">Press "Enter" To Continue</button>
     </div>
     
     <div id="TrainingRound1" class="instruc">
-        <h1>Warmup Round 1: Very Slow</h1>
+        <h1>Warmup Round 1: Slow</h1>
         <div id="trainingDesc" class="trainingDesc">
             <p>
-                10 movements, goal time range of 0-2000ms.
+                8 movements, goal time range of 800 - 1200ms.<br><b class="reminder">Prioritize moving at the right speed!</b>
             </p>
         </div>
-        <button id="beginRound1">Ready</button>
+        <button id="beginRound1">Press "Enter" To Start</button>
     </div>
 
     <div id="TrainingRound2" class="instruc">
-        <h1>Warmup Round 2: Slow</h1>
+        <h1>Warmup Round 2: Medium</h1>
         <div id="trainingDesc" class="trainingDesc">
             <p>
-                10 movements, goal time range of 980-1440ms.
+                8 movements, goal time range of 640 - 960ms.<br><b class="reminder">Prioritize moving at the right speed!</b>
             </p>
         </div>
-        <button id="beginRound2">Ready</button>
+        <button id="beginRound2">Press "Enter" To Start</button>
     </div>
 
     <div id="TrainingRound3" class="instruc">
-        <h1>Warmup Round 3: Medium</h1>
+        <h1>Warmup Round 3: Fast</h1>
         <div id="trainingDesc" class="trainingDesc">
             <p>
-                10 movements, goal time range of 520-780ms.
+                8 movements, goal time range of 400 - 600ms.<br><b class="reminder">Prioritize moving at the right speed!</b>
             </p>
         </div>
-        <button id="beginRound3">Ready</button>
+        <button id="beginRound3">Press "Enter" To Start</button>
     </div>
 
     <div id="TrainingRound4" class="instruc">
-        <h1>Warmup Round 4: Fast</h1>
+        <h1>Warmup Round 4: Very Fast</h1>
         <div id="trainingDesc" class="trainingDesc">
             <p>
-                10 movements, goal time range of 360-540ms.
+                8 movements, goal time range of 240 - 400ms.<br><b class="reminder">Prioritize moving at the right speed!</b>
             </p>
         </div>
-        <button id="beginRound4">Ready</button>
+        <button id="beginRound3">Press "Enter" To Start</button>
     </div>
 
     <div id="TrainingBreak" class="instruc">
@@ -97,7 +172,7 @@
             <p>
                 Aim for this speed when drawing your circle. 
             </p>
-            <img src="draw_video.gif" alt="drawingExample">
+            <img src="draw_video.gif" alt="Drawing Example Video">
         </div>
     </div>
 
@@ -107,26 +182,33 @@
         <div class="data-message">Your data has been recorded. Thank you for completing your training!</div>
     </div>
 
-    <div id="TrainingGoalTime" class="trainingOverlay">
-        <div id="goalTime"></div>
-    </div>
-
     <div id="TrainingFeedback" class="overlay">
         <div id="feedback" class="data-message"></div>
     </div>
 
     <div id="Testing" class="instruc">
-        <h1>Testing day</h1>
+        <h1>Task</h1>
         <div id="trainingDesc" class="trainingDesc">
             <p>
-                Today is a testing day. You will complete 40 practice movements, followed by 100 test movements. 
+                You will complete 32 warmup movements, followed by 16 rounds of 20 test movements. 
             </p>
         </div>
-        <button id="beginTesting">Start</button>
+        <button id="beginTesting">Press "Enter" To Start</button>
     </div>
 
     <div id="TestingFeedback" class="overlay">
         <div id="testingF" class="data-message"></div>
+    </div>
+
+    <div id="GameOver" class="instruc">
+        <h1>Game Over</h1>
+        <div id="FinishScreen" class="trainingDesc">
+            <p>Thank you for completing the experiment. Here is your completion code: <b>C9AOT8TW</b></p>
+            <p>If you have any feedback for the experiment, please provide it below</p>
+            <textarea id="feedbackInput" rows="6" cols="220"></textarea>
+        </div>
+        <button id="feedbackButton">Press "Enter" To Submit Feedback</button>
+        <div id="feedbackSubmitted" class="trainingDesc"></div>
     </div>
 
     <div id="TestingRound" class="instruc">
@@ -134,15 +216,15 @@
         <div id="TestingRoundDesc" class="trainingDesc">
             <p></p>
         </div>
-        <button id="beginTestRound">Ready</button>
-    </div>
-
-    <div id="GameScore" class="stats">
-        <div id="score"></div>
+        <button id="beginTestRound">Press "Enter" To Start</button>
     </div>
 
     <div id="GameRound" class="stats">
         <div id="round"></div>
+    </div>
+
+    <div id="TimeRange" class="stats">
+        <div id="goalTime"></div>
     </div>
 
     <div id="GameTimer" class="stats">
@@ -163,6 +245,10 @@
 
     <audio id="failSound">
         <source src="fail_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="meanSound">
+        <source src="lowbeep.mp3" type="audio/mpeg">
     </audio>
 
     <div id="gameOverScreen" class="overlay">
