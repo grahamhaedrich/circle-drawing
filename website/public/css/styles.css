@@ -55,6 +55,15 @@ body {
     margin-bottom: 15px;
 }
 
+.demoDesc {
+    font-size: 18px;
+    padding-left: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
 .trainingDescCalibration {
     font-size: 18px;
     padding-left: 30px;
@@ -114,6 +123,12 @@ h1 {
     text-align: center;
 }
 
+.handReminder {
+    display: block;
+    text-align: center;
+    color: red;
+}
+
 .steps, .trainingDesc, .trainingOverlay, .stats {
     font-size: 24px;
     padding-left: 10px;
@@ -126,6 +141,25 @@ label {
     text-align: right;
     font-size: 16px;
     margin-right: 10px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 8px;
+    text-align: center;
+    width: 10%; 
+}
+th {
+    background-color: #f2f2f2;
 }
 
 #age, #userID, #loginID {

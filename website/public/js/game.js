@@ -202,6 +202,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         age: localStorage.getItem("age"),
         gender: localStorage.getItem("gender"),
         handedness: localStorage.getItem("handedness"),
+        handednessMeasure: localStorage.getItem("handednessMeasure"),
         device: localStorage.getItem("device"),
         calibration: parseFloat(scaleFactor.toFixed(3)),
       },
@@ -390,138 +391,13 @@ function drawMouse(e) {
   }
 }
 
-let cardLength = 2.125 // inches
-let circleDiaIn = 0.6 // distance the user has to move
-let circleDiaPx = (innerSize + outerSize) // px
-function calcScaleFactor() {
-  function median(numbers) {
-    numbers.sort((a, b) => a - b);
-    const mid = Math.floor(numbers.length / 2);
-    if (numbers.length % 2 === 0) {
-        return (numbers[mid - 1] + numbers[mid]) / 2;
-    } else {
-        return numbers[mid];
-    }
-  }
-
-  let pxTraveled = median(movements)
-  let pxPerInch = pxTraveled/cardLength
-  let desiredPxPerInch = circleDiaPx/circleDiaIn
-  scaleFactor = desiredPxPerInch/pxPerInch * 1/2
-}
-
-var movements = []
-async function calibrateMouse() {
-  return new Promise(async (resolve) => {
-    requestLock()
-
-    const page = document.getElementById("CalibrationProcess");
-    page.style.display = "flex";
-
-    const warning = document.getElementById("movementWarningMessage")
-    warning.style.display = "none";
-
-    const movement1 = document.getElementById("movement1")
-    const movement2 = document.getElementById("movement2")
-    const movement3 = document.getElementById("movement3")
-    const movement4 = document.getElementById("movement4")
-    const movement5 = document.getElementById("movement5")
-
-    const button = document.getElementById("calibrationProcessButton");
-    button.disabled = true
-    button.style.backgroundColor = "#fabdbd";
-    button.style.color = "black"
-    const message = document.getElementById("movementMessage")
-
-    let maxDeltaX = 200
-    let maxDeltaY = 40
-    let numMovements = 5
-    let startX, startY, endX, endY, deltaX, deltaY
-    let inMovement = false, redo = false
-
-    function keyPress(e) {
-      if (e.key.toLowerCase() == "r" && button.disabled == true) {
-        movements = []
-        inMovement = false
-
-        movement1.innerText = "Movement 1: No Data"
-        movement2.innerText = "Movement 2: No Data"
-        movement3.innerText = "Movement 3: No Data"
-        movement4.innerText = "Movement 4: No Data"
-        movement5.innerText = "Movement 5: No Data"
-        movement1.style.backgroundColor = "#fabdbd"
-        movement2.style.backgroundColor = "#fabdbd"
-        movement3.style.backgroundColor = "#fabdbd"
-        movement4.style.backgroundColor = "#fabdbd"
-        movement5.style.backgroundColor = "#fabdbd"
-        message.style.display = "none"
-        button.innerText = 'Complete Calibration Procedure'
-        redo = false
-      } else if (e.key.toLowerCase() == "s" && inMovement == false && redo == false && button.disabled == true) {
-        inMovement = true
-        message.innerText = `Movement Started`
-        message.style.borderColor = "blue"
-        message.style.display = "flex"
-        startX = mouseX;
-        startY = mouseY;
-      } else if (e.key.toLowerCase() == "e" && inMovement == true && redo == false && button.disabled == true) {
-        inMovement = false
-        endX = mouseX;
-        endY = mouseY;
-        deltaX = Math.abs(startX - endX)
-        deltaY = Math.abs(startY - endY)
-        let mov = movements.length + 1
-        if (deltaY > maxDeltaY) {
-          message.innerText = `Movement ${mov} Failed: Movement was not horizontal. Please try again.`
-          message.style.borderColor = "red"
-        } else if (deltaX < 50) {
-          message.innerText = `Movement ${mov} Failed: Movement was too short. Please increase sensitivity and try again.`
-          message.style.borderColor = "red"
-        } else {
-          movements.push(deltaX)
-          let box = document.getElementById(`movement${mov}`)
-          box.innerText = `Movement ${mov}: ${deltaX} pixels`
-          box.style.backgroundColor = '#b6ffb6'
-
-          if (movements.length == numMovements) {
-            let err = Math.max(...movements) - Math.min(...movements)
-            if (err > maxDeltaX) {
-              redo = true
-              message.innerText = `Movements have too much difference (max accepted is ${maxDeltaX}px, you have ${err}px). Please click 'r' to redo.`
-              movement1.style.backgroundColor = "#fabdbd"
-              movement2.style.backgroundColor = "#fabdbd"
-              movement3.style.backgroundColor = "#fabdbd"
-              movement4.style.backgroundColor = "#fabdbd"
-              movement5.style.backgroundColor = "#fabdbd"
-              button.style.backgroundColor = "#fabdbd"
-              message.style.borderColor = "red"
-              button.innerText = 'Press "r" to Restart Calibration'
-            }
-            else {
-              message.innerText = 'All Movements Complete. Please Click "Enter" to Continue.'
-              message.style.borderColor = "green"
-              button.style.backgroundColor = '#b6ffb6'
-              button.innerText = 'Press "Enter" to Continue'
-              button.disabled = false
-            }  
-          } else {
-            message.innerText = `Movement ${mov} Complete.`
-            message.style.borderColor = "green"
-          }
-        }
-      } else if (e.key == "Enter" && button.disabled == false) {
-        document.removeEventListener("keydown", keyPress)
-        page.style.display = "none";
-        calcScaleFactor();
-        resolve();
-      }
-    }
-
-    document.addEventListener("keydown", keyPress)
-  });
-}
-
 // TRAINING
+function TrainingGroup(minTime, maxTime, reward) {
+  this.minTime = id;
+  this.speaker = speaker;
+  this.country = country;
+}
+
 let trainingBlocks = 4;
 let trainingMovements = 50;
 let trainingDemoTime = 10 * 1000;
@@ -567,12 +443,12 @@ async function trainingGame() {
     let totalRounds = 0;
     blockAccuracy = 0;
     let blockMovements = 0;
-    angle = 180
+
     for (let b = 0; b < trainingBlocks; b++) {
       trainingPageHeading.textContent = `Training Block ${b+1}`
 
       if (b == 0) {
-        trainingPageDesc.textContent = `Goal time range: ${trainingMinTime} - ${trainingMaxTime} ms. Goal accuracy: 75%.`
+        trainingPageDesc.innerHTML = `Goal time range: ${trainingMinTime} - ${trainingMaxTime} ms. Goal accuracy: 75%.`
       } else if (blockMovements == 0) {
         trainingPageDesc.innerHTML = `Your average accuracy in the previous block was 0%<br>Now, Block ${b+1}: goal time range of ${trainingMinTime} - ${trainingMaxTime} ms, goal accuracy of 75%`
       } else {
@@ -650,7 +526,6 @@ async function trainingGame() {
     gameTimer.style.display = "none";
     goalTime.style.display = "none";
 
-    const averageAccuracy =  allAccuracies.reduce((sum, accuracy) => sum + accuracy, 0) /allAccuracies.length;
     resolve();
   });
 }
@@ -889,11 +764,11 @@ async function testingGame() {
       testingPageHeading.textContent = `Testing Round ${round}`;
 
       if (round == 1) {
-        testingPageDesc.innerHTML = `16 movements, goal time: ${testTimeIntervals[t].min} - ${testTimeIntervals[t].max}ms<br><b class="reminder">Prioritize moving at the right speed!</b>`;
+        testingPageDesc.innerHTML = `16 movements, goal time: ${testTimeIntervals[t].min} - ${testTimeIntervals[t].max}ms<br><b class="reminder">Prioritize moving at the right speed!</b><br><b class="handReminder">Draw with your non-dominant (right) hand</b>`;
       } else if (blockMovements == 0) {
-        testingPageDesc.innerHTML = `Your average accuracy in the previous block was 0%<br>Next block: 16 movements, goal time of ${testTimeIntervals[t].min} - ${testTimeIntervals[t].max} ms<br><b class="reminder">Prioritize moving at the right speed!</b>`;
+        testingPageDesc.innerHTML = `Your average accuracy in the previous block was 0%<br>Next block: 16 movements, goal time of ${testTimeIntervals[t].min} - ${testTimeIntervals[t].max} ms<br><b class="reminder">Prioritize moving at the right speed!</b><br><b class="handReminder">Draw with your non-dominant (right) hand</b>`;
       } else {
-        testingPageDesc.innerHTML = `Your average accuracy in the previous block was ${Math.round(blockAccuracy/(blockMovements))}%<br>Next block: 16 movements, goal time of ${testTimeIntervals[t].min} - ${testTimeIntervals[t].max} ms<br><b class="reminder">Prioritize moving at the right speed!</b>`;
+        testingPageDesc.innerHTML = `Your average accuracy in the previous block was ${Math.round(blockAccuracy/(blockMovements))}%<br>Next block: 16 movements, goal time of ${testTimeIntervals[t].min} - ${testTimeIntervals[t].max} ms<br><b class="reminder">Prioritize moving at the right speed!</b><br><b class="handReminder">Draw with your non-dominant (right) hand</b>`;
       }
 
       gameRound.style.display = "none";
@@ -985,8 +860,8 @@ function testingRoundStart() {
 // GAME
 function lineToAngle(ctx, x1, y1, length, ang) {
   var angle = (ang - 90) * Math.PI / 180;
-  var x2 = x1 + length * Math.cos(angle),
-      y2 = y1 + length * Math.sin(angle);
+  var x2 = x1 - length * Math.cos(angle),
+      y2 = y1 - length * Math.sin(angle);
 
   ctx.beginPath();
   ctx.moveTo(x1, y1);
@@ -1049,13 +924,13 @@ function displayBoundary() {
   ctx.strokeStyle = "black";
   ctx.lineWidth = 3;    
   ctx.beginPath();
-  ctx.arc(borderX, borderY, (innerSize + outerSize)/2, radAngle + Math.PI, radAngle + Math.PI*2);
+  ctx.arc(borderX, borderY, (innerSize + outerSize)/2, radAngle + Math.PI*2, radAngle + Math.PI);
   ctx.stroke();
 
   ctx.setLineDash([]);
   lineToAngle(ctx, rotatedRightX, rotatedRightY, 12, angle - 45);
   lineToAngle(ctx, rotatedRightX, rotatedRightY, 12, angle + 45);
-  
+  console.log("Angle: ", angle)
   ctx.setLineDash([]);
   ctx.lineWidth = 1;
   ctx.strokeStyle = "black";
@@ -1207,7 +1082,7 @@ function beginDraw(minTime, maxTime) {
 
       // draw perfect path
       let progress = elapsedTime / meanTime;
-      let currentAngle = radAngle + Math.PI + progress * Math.PI;
+      let currentAngle = radAngle + Math.PI - progress * Math.PI;
       const perfectX = borderX + ((innerSize + outerSize) / 2) * Math.cos(currentAngle);
       const perfectY = borderY + ((innerSize + outerSize) / 2) * Math.sin(currentAngle);
       
@@ -1224,7 +1099,7 @@ function beginDraw(minTime, maxTime) {
         perfectPathCtx.strokeStyle = "lightgreen";
         perfectPathCtx.lineWidth = 5;    
         perfectPathCtx.beginPath();
-        perfectPathCtx.arc(borderX, borderY, (innerSize + outerSize)/2, radAngle + Math.PI, Math.max(radAngle + Math.PI, currentAngle - 2.2*Math.PI/180));
+        perfectPathCtx.arc(borderX, borderY, (innerSize + outerSize)/2, radAngle + Math.PI, Math.min(radAngle + Math.PI, currentAngle - 2.2*Math.PI/180), true);
         perfectPathCtx.stroke();
         lastX = perfectX
         lastY = perfectY
@@ -1460,19 +1335,21 @@ function dotAccuracy(x, y) {
   const radius = (innerSize + outerSize)/2
   
   let dotAngle = Math.atan2(dy, dx) + Math.PI;
-  let radAngleStart = angle * (Math.PI / 180);
+  let radAngleStart =  angle * (Math.PI / 180);
   let radAngleEnd = radAngle + Math.PI;
   if (radAngleEnd > 2*Math.PI && dotAngle >= 0 && dotAngle <= 1/2*Math.PI) {
     dotAngle += 2*Math.PI
   }
   
   // we consider a 1px difference as an error of 3%
-  if (dotAngle >= radAngleStart && dotAngle <= radAngleEnd) {
+  if (!(dotAngle >= radAngleStart && dotAngle <= radAngleEnd)) {
+      console.log("True")
       return Math.max(100 - Math.abs(radius - distToCenter)*3, 0);
   } else {
-    let distanceToStart = Math.sqrt( (x - rotatedLeftX)**2 + (y - rotatedLeftY)**2 )
-    let distanceToEnd = Math.sqrt( (x - rotatedRightX)**2 + (y - rotatedRightY)**2 );
-    return Math.max(100 - distanceToStart, 100 - distanceToEnd, 0);
+      console.log("False")
+      let distanceToStart = Math.sqrt( (x - rotatedLeftX)**2 + (y - rotatedLeftY)**2 )
+      let distanceToEnd = Math.sqrt( (x - rotatedRightX)**2 + (y - rotatedRightY)**2 );
+      return Math.max(100 - distanceToStart, 100 - distanceToEnd, 0);
   }
 }
 

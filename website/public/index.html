@@ -10,14 +10,104 @@
     <div class="container">
         <h1>Shape Drawing Test</h1>
         <div id="userInformation">
-            <!--<h2>Login</h2>
-            <form id="loginForm" action="game.html" method="get">
-                <label for="loginID">User ID:</label>
-                <input type="text" id="loginID" name="loginID" required><br>
-                <div id="loginError"></div>
-                <button type="button" id="loginButton">Start</button>
-            </form>-->
-            <h2>Sign Up</h2>
+            <h2 id="handednessHeader">Handedness Test</h2>
+            <table id="handednessTable">
+                <thead>
+                    <tr>
+                        <th>Activity</th>
+                        <th>Left</th>
+                        <th>Right</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Writing</td>
+                        <td><input type="radio" name="writing" value="left"></td>
+                        <td><input type="radio" name="writing" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Drawing</td>
+                        <td><input type="radio" name="drawing" value="left"></td>
+                        <td><input type="radio" name="drawing" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Throwing</td>
+                        <td><input type="radio" name="throwing" value="left"></td>
+                        <td><input type="radio" name="throwing" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using Scissors</td>
+                        <td><input type="radio" name="scissors" value="left"></td>
+                        <td><input type="radio" name="scissors" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using a Toothbrush</td>
+                        <td><input type="radio" name="toothbrush" value="left"></td>
+                        <td><input type="radio" name="toothbrush" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using a Knife (without a fork)</td>
+                        <td><input type="radio" name="knife" value="left"></td>
+                        <td><input type="radio" name="knife" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using a Spoon</td>
+                        <td><input type="radio" name="spoon" value="left"></td>
+                        <td><input type="radio" name="spoon" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using a Broom (upper hand)</td>
+                        <td><input type="radio" name="broom" value="left"></td>
+                        <td><input type="radio" name="broom" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Striking a Match</td>
+                        <td><input type="radio" name="match" value="left"></td>
+                        <td><input type="radio" name="match" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Opening a Box (holding the lid)</td>
+                        <td><input type="radio" name="box" value="left"></td>
+                        <td><input type="radio" name="box" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Holding a Computer Mouse</td>
+                        <td><input type="radio" name="mouse" value="left"></td>
+                        <td><input type="radio" name="mouse" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using a Computer Trackpad</td>
+                        <td><input type="radio" name="trackpad" value="left"></td>
+                        <td><input type="radio" name="trackpad" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Using a Key to Unlock a Door</td>
+                        <td><input type="radio" name="key" value="left"></td>
+                        <td><input type="radio" name="key" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Holding a Hammer</td>
+                        <td><input type="radio" name="hammer" value="left"></td>
+                        <td><input type="radio" name="hammer" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Holding a Brush or Comb</td>
+                        <td><input type="radio" name="brush" value="left"></td>
+                        <td><input type="radio" name="brush" value="right"></td>
+                    </tr>
+                    <tr>
+                        <td>Holding a Cup while Drinking</td>
+                        <td><input type="radio" name="cup" value="left"></td>
+                        <td><input type="radio" name="cup" value="right"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <label for="userID" id="userLabel">Prolific ID:</label>
+            <input type="text" id="userID" name="userID" required><br>
+            <button type="button" id="handednessButton">Submit</button>
+            <div id="handednessError" class="error"></div>
+
+            <h2 id="signUp">Sign Up</h2>
             <form id="userInfoForm" action="game.html" method="get">
                 <label for="age">Age:</label>
                 <input type="number" id="age" name="age" required><br>
@@ -47,9 +137,6 @@
                     <option value="laptop">Other</option>
                 </select><br>
 
-                <label for="userid">Prolific ID:</label>
-                <input type="text" id="userID" name="userid" required><br>
-
                 <div id="consentContainer">
                     <embed id="consentPDF" src="consent_form.pdf#toolbar=0" type="application/pdf">
                     <br>
@@ -70,7 +157,8 @@
             ref,
             set,
             get,
-            child
+            child,
+            update
         } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
 
         const firebaseConfig = {
@@ -86,11 +174,35 @@
 
         const app = initializeApp(firebaseConfig);
         const dbRef = ref(getDatabase());
+        const db = getDatabase();
+        document.getElementById('signUp').style.display = 'none';
+        document.getElementById('userInfoForm').style.display = 'none';
+
+        var userID = ""
 
         async function userExists(id) {
             const snapshot = await get(child(dbRef, `users/${id}/userData`));
             return snapshot.exists();
         }
+
+        async function isUserBlocked(userID) {
+            const reference = ref(db, `blockedList/${userID}`);
+
+            return get(reference)
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error checking blocked list:", error);
+                    return false;
+                });
+        }
+
+
         /* commented out for Prolific
         document.getElementById('loginButton').addEventListener('click', async function(event) {
             var loginID = document.getElementById('loginID').value;
@@ -107,13 +219,63 @@
                 document.getElementById('loginForm').submit();
             }
         }); */
+        
+        document.getElementById('handednessButton').addEventListener('click', async function(event) {
+            let leftCount = 0;
+            let rightCount = 0;
+            let allFilled = true;
+            handednessError.innerHTML = '';
 
+            const activities = ['writing', 'drawing', 'throwing', 'scissors', 'toothbrush', 'knife', 'spoon', 'broom', 'match', 'box', 'mouse', 'trackpad', 'key', 'hammer', 'brush', 'cup'];
+
+            activities.forEach(activity => {
+                const leftRadio = document.querySelector(`input[name="${activity}"][value="left"]`);
+                const rightRadio = document.querySelector(`input[name="${activity}"][value="right"]`);
+
+                if (leftRadio && leftRadio.checked) leftCount++;
+                if (rightRadio && rightRadio.checked) rightCount++;
+                if (!leftRadio.checked && !rightRadio.checked) {
+                    allFilled = false;
+                }
+            });
+
+            userID = document.getElementById('userID').value;
+            var isBlocked = await isUserBlocked(userID)
+
+            const metric = 100 * ((leftCount)/(rightCount + leftCount));
+            localStorage.setItem('handednessMeasure', metric);
+            
+            if (!allFilled) {
+                handednessError.innerHTML = '<p class="error">Please fill out the entire table.</p>';
+            } else if (!userID) {
+                handednessError.innerHTML = '<p class="error">Please enter your Prolific ID.</p>';
+            }
+            else if (metric != 100 || isBlocked){
+                document.getElementById('handednessButton').style.display = 'none'
+                handednessError.innerHTML = '<p class="error">You are not eligible to participate. Please exit the study on Prolific.</p>';
+                
+                const reference = ref(db, `blockedList/${userID}`);
+                set(reference, true)
+            }   
+            else {
+                localStorage.setItem('userID', userID);
+
+                document.querySelector('table').style.display = 'none';
+                document.getElementById('handednessError').style.display = 'none';
+                document.getElementById('handednessButton').style.display = 'none';
+                document.getElementById('handednessHeader').style.display = 'none';
+                document.getElementById('userID').style.display = 'none';
+                document.getElementById('userLabel').style.display = 'none';
+                document.getElementById('signUp').style.display = 'block';
+                document.getElementById('userInfoForm').style.display = 'block';
+            }
+        });
+        
         document.getElementById('startButton').addEventListener('click', async function(event) {
             var age = document.getElementById('age').value;
             var gender = document.getElementById('gender').value;
             var handedness = document.getElementById('handedness').value;
             var device = document.getElementById('device').value;
-            var userID = document.getElementById('userID').value;
             var consent = document.getElementById('consentCheckbox').checked;
             var errorMessages = document.getElementById('errorMessages');
 
@@ -134,9 +296,6 @@
                 else if (!device) {
                     errorMessages.innerHTML = '<p class="error">You must select your device.</p>';
                 }
-                else if (!userID) {
-                    errorMessages.innerHTML = '<p class="error">You must enter a Prolific ID.</p>';
-                }
                 else if (!consent) {
                     errorMessages.innerHTML = '<p class="error">You must accept the consent form.</p>';
                 }
@@ -154,7 +313,6 @@
                 localStorage.setItem('gender', gender);
                 localStorage.setItem('handedness', handedness);
                 localStorage.setItem('device', device);
-                localStorage.setItem('userID', userID);
                 localStorage.setItem('loggedIn', loggedIn)
                 document.getElementById('userInfoForm').submit();
             }

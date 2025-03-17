@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Drawing Game</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <canvas id="mainCanvas"></canvas>
+    <canvas id="mouseCanvas"></canvas>
+    <canvas id="pathCanvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+    <script src="https://u</div>npkg.com/regression"></script>
+    <script type="module" src="./demo.js"></script>
+
+    <div id="MovementInstructions" class="instruc">
+        <h1>Instructions</h1>
+        <ol class="trainingDesc">
+            <div class="instrucHeader">Goal</div>
+            <div>&nbsp The goal of this task is to accurately move your cursor along the dotted line to the target at the correct speed. <b>Prioritize moving at the correct speed!</b></div>
+            <br>
+            <br>
+            <div class="instrucHeader">Performing the Movement</div>
+            <ol class="movementList">
+                <li>Place your mouse cursor inside the blue circle.</li>
+                <img src="../blue_circle_demo.png" alt="Start of Movement" class="instrucImage">
+                <li>You will hear a countdown consisting of 4 audible tones.</li>
+                <li>Start moving on the 3<sup>rd</sup> tone when the circle turns green, initiating a movement with your non-dominant (right) hand following the dotted black path. </li>
+                <li>There will be a green dot that conveys the ideal speed and accuracy. Follow this dot as closely as you can.</li>
+                <img src="../movement_demo.png" alt="Middle of Movement" class="instrucImage">
+                <li>Complete the movement on the 4<sup>th</sup> tone by hitting the target. The ideal landing position is the green zone, while the least desired landing position is the red zone.</li>
+                <img src="../completed_demo.png" alt="End of Movement" class="instrucImage">
+            </ol>
+
+            <div class="instrucHeader">Feedback</div>
+            <div>&nbsp After each movement, you will receive feedback on your performance.</div>
+            <ol class="feedbackList">
+                <li>Move Faster: You finished the movement too quickly for the time interval.</li>
+                <li>Move Slower: You finished the movement too slowly for the time interval.</li>
+            </ol>
+            </li>
+            <br>
+            <br>
+            <div>The experiment will temporarily change your cursor sensitivity. Press "Esc" to pause the experiment.</div>
+        </ol>
+        <button id="beginPractice">Press "Enter" to Start</button>
+    </div>
+
+    <div id="MouseOverlay" class="mouseTitle">
+        <h1>Re-Enable Mouse Locking</h1>
+        <div id="MouseOverlayDesc" class="overlayDesc">
+                Please wait 5s, then click anywhere on the screen to continue the experiment.
+        </div>
+    </div>
+
+    <div id="Demo" class="instruc">
+        <h1>Demo</h1>
+        <div id="trainingDesc" class="trainingDesc">
+            <p>
+                You will complete 20 movements split up into 4 speed groups.
+            </p>
+        </div>
+        <button id="beginDemo">Press "Enter" To Start</button>
+    </div>
+
+    <div id="DemoFeedback" class="overlay">
+        <div id="demoF" class="data-message"></div>
+    </div>
+
+    <div id="GameOver" class="instruc">
+        <h1>Game Over</h1>
+        <div id="FinishScreen" class="trainingDesc">
+        </div>
+    </div>
+
+    <div id="GameOverDemo" class="instruc">
+        <h1>Game Over</h1>
+        <div id="FinishScreenDemo" class="demoDesc">
+        </div>
+    </div>
+
+    <div id="DemoRound" class="instruc">
+        <h1></h1>
+        <div id="DemoRoundDesc" class="demoDesc">
+            <p></p>
+        </div>
+        <button id="beginTestRound">Press "Enter" To Start</button>
+    </div>
+
+    <div id="GameRound" class="stats">
+        <div id="round"></div>
+    </div>
+
+    <div id="TimeRange" class="stats">
+        <div id="goalTime"></div>
+    </div>
+
+    <div id="GameTimer" class="stats">
+        <div id="timer"></div>
+    </div>
+
+    <audio id="readySound">
+        <source src="../ready_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="goSound">
+        <source src="../go_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="finishSound">
+        <source src="../finish_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="failSound">
+        <source src="../fail_sound.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="meanSound">
+        <source src="../lowbeep.mp3" type="audio/mpeg">
+    </audio>
+</body>
+</html>
